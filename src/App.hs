@@ -37,25 +37,25 @@ serverApi = Proxy
 getAllBooks :: ClientM (Maybe Val)
 getAllBooks = client clientApi
 
-appMain2 :: String -> IO (Either ServantErr (Maybe Val))
-appMain2 a = do
+appMain2 :: Option -> String -> IO (Either ServantErr (Maybe Val))
+appMain2 o a = do
   manager <- liftIO $ newManager defaultManagerSettings
-  mapBoth (const err500) id <$> runClientM getAllBooks (ClientEnv manager (BaseUrl Http a 80 ""))
+  mapBoth (const err500) id <$> runClientM getAllBooks (ClientEnv manager (BaseUrl Http a (O.clientPort o) ""))
 
-app3 :: String -> Handler (Maybe Val)
-app3 a = lift $ join . rightToMaybe <$> appMain2 a
+app3 :: Option -> String -> Handler (Maybe Val)
+app3 o a = lift $ join . rightToMaybe <$> appMain2 o a
 
-server :: Server ServerApi
+server :: Option -> Server ServerApi
 server = app3
 
-mkApp :: IO Application
-mkApp = return $ serve serverApi server
+mkApp :: Option -> IO Application
+mkApp o = return $ serve serverApi (server o)
 
 run :: Option -> IO ()
 run o = withStdoutLogger $ \apilogger -> do
   let settings =
-        setPort (O.port o) $
-          setBeforeMainLoop (hPutStrLn stderr ("listening on port " ++ show (O.port o))) $
+        setPort (O.serverPort o) $
+          setBeforeMainLoop (hPutStrLn stderr ("listening on port " ++ show (O.serverPort o))) $
             setLogger apilogger defaultSettings
-  runSettings settings =<< mkApp
+  runSettings settings =<< mkApp o
 

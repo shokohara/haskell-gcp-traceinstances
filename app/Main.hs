@@ -6,14 +6,17 @@ import Options.Applicative
 import Data.Semigroup ((<>))
 import Option
 
-gbOpt :: Parser Int
-gbOpt = option auto (long "port" <> help "Int")
+clientPortOpt :: Parser Int
+clientPortOpt = option auto (long "clientPort" <> help "Int")
 
-percentOpt :: Parser Float
-percentOpt = option auto (long "percent" <> help "Float")
+clientHostOpt :: Parser String
+clientHostOpt = option auto (long "clientHost" <> help "Int")
+
+gbOpt :: Parser Int
+gbOpt = option auto (long "serverPort" <> help "Int")
 
 sample :: Parser Option
-sample = Option <$> gbOpt
+sample = Option <$> gbOpt <*> clientHostOpt <*> clientPortOpt
 
 opts :: ParserInfo Option
 opts = info (sample <**> helper) ( fullDesc
